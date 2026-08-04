@@ -1,0 +1,175 @@
+:root {
+  --ink: #1b2430;
+  --slate: #435066;
+  --slate-light: #7c8aa0;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --line: #e2e6ec;
+  --navy: #16324f;
+  --gold: #c8952a;
+  --gold-bg: #fdf3e0;
+  --green: #2f8f5b;
+  --amber: #c8952a;
+  --red: #c94a3d;
+  --radius: 8px;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Consolas", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+a { color: inherit; }
+
+.topbar {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar .brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 15px;
+}
+
+.topbar .brand small {
+  display: block;
+  font-weight: 400;
+  color: #b7c4d6;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.topbar nav a {
+  color: #d6dee9;
+  text-decoration: none;
+  margin-left: 20px;
+  font-size: 13px;
+}
+.topbar nav a:hover { color: #fff; }
+
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+h1, h2, h3 { color: var(--navy); margin: 0 0 4px; }
+h1 { font-size: 20px; }
+h2 { font-size: 16px; }
+.subtle { color: var(--slate-light); font-size: 12px; margin-bottom: 16px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { color: var(--slate); font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
+
+tr.current-week { background: var(--gold-bg); }
+tr.current-week td:first-child { border-left: 3px solid var(--gold); }
+
+.star { color: var(--gold); margin-right: 4px; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge.green { background: #e5f3ea; color: var(--green); }
+.badge.amber { background: var(--gold-bg); color: var(--amber); }
+.badge.red { background: #fbeae7; color: var(--red); }
+.badge.grey { background: #eef0f3; color: var(--slate); }
+
+.deviation.pos { color: var(--red); font-weight: 600; }
+.deviation.neg { color: var(--green); font-weight: 600; }
+.deviation.zero { color: var(--slate); }
+
+input, select, button, textarea {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+input, select, textarea {
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 100%;
+}
+
+button {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover { background: #1c3d61; }
+button.secondary {
+  background: transparent;
+  color: var(--navy);
+  border: 1px solid var(--line);
+}
+button.secondary:hover { background: #f0f2f5; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-grid label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--slate-light);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.comment-log {
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+.comment-log .entry { padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.comment-log .entry b { color: var(--navy); }
+.comment-log .entry .date { color: var(--slate-light); margin-left: 6px; }
+
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy);
+}
+.login-box {
+  background: #fff;
+  padding: 32px;
+  border-radius: 10px;
+  width: 320px;
+}
+.login-box h1 { margin-bottom: 6px; }
+.login-box .subtle { margin-bottom: 20px; }
+.error-text { color: var(--red); font-size: 12px; margin-top: 8px; }
