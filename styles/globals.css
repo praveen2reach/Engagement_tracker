@@ -173,3 +173,60 @@ button.secondary:hover { background: #f0f2f5; }
 .login-box h1 { margin-bottom: 6px; }
 .login-box .subtle { margin-bottom: 20px; }
 .error-text { color: var(--red); font-size: 12px; margin-top: 8px; }
+
+/* Weekly status report */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.report-header h1 { font-size: 22px; margin: 0; }
+
+.rag-row { display: flex; gap: 14px; margin-bottom: 20px; }
+.rag-box {
+  flex: 1;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+}
+.rag-box.G { background: var(--green); }
+.rag-box.A { background: var(--amber); }
+.rag-box.R { background: var(--red); }
+.rag-box .rag-label { font-size: 11px; text-transform: uppercase; opacity: 0.9; letter-spacing: 0.04em; }
+.rag-box .rag-value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+.rag-box select {
+  margin-top: 8px;
+  width: auto;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+  font-size: 11px;
+  padding: 3px 6px;
+}
+.rag-box.auto::after {
+  content: 'Auto-suggested';
+  display: block;
+  font-size: 10px;
+  opacity: 0.8;
+  margin-top: 6px;
+}
+
+.gantt-wrap { overflow-x: auto; }
+.gantt-table { border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+.gantt-table th, .gantt-table td { border: 1px solid var(--line); padding: 6px 8px; }
+.gantt-table th.week-col, .gantt-table td.week-col { min-width: 26px; text-align: center; padding: 6px 2px; }
+.gantt-table td.gantt-cell.filled { background: #9cc7ea; }
+.gantt-table td.gantt-cell.milestone { background: #fff; color: var(--gold); font-weight: 700; text-align: center; }
+.gantt-table tr.milestone-row td:first-child { font-weight: 600; }
+
+.milestone-table td, .milestone-table th { font-size: 12px; }
+
+@media print {
+  .topbar, .no-print { display: none !important; }
+  .container { padding: 0; max-width: 100%; }
+  .panel { border: none; box-shadow: none; padding: 0; margin-bottom: 16px; }
+  body { background: #fff; }
+}

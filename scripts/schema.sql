@@ -57,3 +57,12 @@ CREATE TABLE IF NOT EXISTS comments (
 
 CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_comments_task ON comments(task_id);
+
+-- Added for the weekly status report (Gantt + RAG + Milestones)
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_milestone BOOLEAN DEFAULT false;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS owner TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS week_override INTEGER;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_overall TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_schedule TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_scope TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_resource TEXT;

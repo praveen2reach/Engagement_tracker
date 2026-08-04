@@ -3,7 +3,7 @@ const { authOptions } = require('../../../lib/auth');
 const { sql, getPool } = require('../../../lib/db');
 const { recalculateProject } = require('../../../lib/recalculate');
 
-const ADMIN_FIELDS = ['name', 'sequence', 'predecessor_id', 'dependency_type', 'duration_days'];
+const ADMIN_FIELDS = ['name', 'sequence', 'predecessor_id', 'dependency_type', 'duration_days', 'is_milestone', 'owner'];
 const TEAM_FIELDS = ['actual_start', 'actual_end', 'status'];
 
 export default async function handler(req, res) {

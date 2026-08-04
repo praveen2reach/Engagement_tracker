@@ -38,13 +38,13 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     if (session.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-    const { project_id, name, sequence, predecessor_id, dependency_type, duration_days } = req.body;
+    const { project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, owner } = req.body;
     if (!project_id || !name || !duration_days) {
       return res.status(400).json({ error: 'project_id, name, duration_days required' });
     }
     const { rows } = await sql`
-      INSERT INTO tasks (project_id, name, sequence, predecessor_id, dependency_type, duration_days)
-      VALUES (${project_id}, ${name}, ${sequence || 0}, ${predecessor_id || null}, ${dependency_type || 'FS'}, ${duration_days})
+      INSERT INTO tasks (project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, owner)
+      VALUES (${project_id}, ${name}, ${sequence || 0}, ${predecessor_id || null}, ${dependency_type || 'FS'}, ${duration_days}, ${is_milestone || false}, ${owner || null})
       RETURNING *
     `;
     await recalculateProject(project_id);

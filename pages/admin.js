@@ -18,7 +18,7 @@ export default function Admin() {
   const [holidays, setHolidays] = useState([]);
 
   const [newProject, setNewProject] = useState({ name: '', start_date: '' });
-  const [newTask, setNewTask] = useState({ name: '', predecessor_id: '', dependency_type: 'FS', duration_days: 1 });
+  const [newTask, setNewTask] = useState({ name: '', predecessor_id: '', dependency_type: 'FS', duration_days: 1, is_milestone: false, owner: '' });
   const [newHoliday, setNewHoliday] = useState({ holiday_date: '', label: '' });
 
   const loadAll = useCallback(async (pid) => {
@@ -67,9 +67,11 @@ export default function Admin() {
         predecessor_id: newTask.predecessor_id || null,
         dependency_type: newTask.dependency_type,
         duration_days: Number(newTask.duration_days),
+        is_milestone: newTask.is_milestone,
+        owner: newTask.owner || null,
       }),
     });
-    setNewTask({ name: '', predecessor_id: '', dependency_type: 'FS', duration_days: 1 });
+    setNewTask({ name: '', predecessor_id: '', dependency_type: 'FS', duration_days: 1, is_milestone: false, owner: '' });
     loadTasks(projectId);
   }
 
@@ -83,6 +85,22 @@ export default function Admin() {
     await fetch(`/api/tasks/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ duration_days: Number(duration_days) }),
+    });
+    loadTasks(projectId);
+  }
+
+  async function toggleMilestone(id, is_milestone) {
+    await fetch(`/api/tasks/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_milestone }),
+    });
+    loadTasks(projectId);
+  }
+
+  async function editOwner(id, owner) {
+    await fetch(`/api/tasks/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ owner }),
     });
     loadTasks(projectId);
   }
@@ -103,6 +121,7 @@ export default function Admin() {
         <div className="brand">Engagement Task Tracker<small>Admin setup · {session?.user?.name}</small></div>
         <nav>
           <a href="/">Back to tracker</a>
+          <a href="/report">Weekly report</a>
           <a href="#" onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }}>Sign out</a>
         </nav>
       </div>
@@ -133,7 +152,7 @@ export default function Admin() {
             <h2>Task setup</h2>
             <p className="subtle">Set dependency to a predecessor task. FS = starts after predecessor ends. SS = runs in parallel, starting the same day as the predecessor.</p>
             <table style={{ marginBottom: 16 }}>
-              <thead><tr><th>Seq</th><th>Task</th><th>Predecessor</th><th>Type</th><th>Duration (days)</th><th>Planned</th><th></th></tr></thead>
+              <thead><tr><th>Seq</th><th>Task</th><th>Predecessor</th><th>Type</th><th>Duration (days)</th><th>Owner</th><th>Milestone</th><th>Planned</th><th></th></tr></thead>
               <tbody>
                 {tasks.map((t) => (
                   <tr key={t.id}>
@@ -142,6 +161,8 @@ export default function Admin() {
                     <td>{tasks.find((x) => x.id === t.predecessor_id)?.name || '— (project start)'}</td>
                     <td>{t.dependency_type}</td>
                     <td><input type="number" min="1" defaultValue={t.duration_days} style={{ width: 70 }} onBlur={(e) => editDuration(t.id, e.target.value)} /></td>
+                    <td><input defaultValue={t.owner || ''} style={{ width: 100 }} placeholder="Owner" onBlur={(e) => editOwner(t.id, e.target.value)} /></td>
+                    <td style={{ textAlign: 'center' }}><input type="checkbox" defaultChecked={t.is_milestone} onChange={(e) => toggleMilestone(t.id, e.target.checked)} /></td>
                     <td>{t.planned_start?.slice(0, 10)} → {t.planned_end?.slice(0, 10)}</td>
                     <td><button className="secondary" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => deleteTask(t.id)}>Remove</button></td>
                   </tr>
@@ -165,6 +186,11 @@ export default function Admin() {
                 </select>
               </div>
               <div><label>Duration (days)</label><input type="number" min="1" value={newTask.duration_days} onChange={(e) => setNewTask({ ...newTask, duration_days: e.target.value })} /></div>
+              <div><label>Owner</label><input value={newTask.owner} onChange={(e) => setNewTask({ ...newTask, owner: e.target.value })} placeholder="e.g. Mastek" /></div>
+              <div style={{ alignSelf: 'end', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input type="checkbox" id="milestone-cb" checked={newTask.is_milestone} onChange={(e) => setNewTask({ ...newTask, is_milestone: e.target.checked })} style={{ width: 'auto' }} />
+                <label htmlFor="milestone-cb" style={{ textTransform: 'none', fontSize: 13, color: 'inherit', marginBottom: 0 }}>Show as milestone</label>
+              </div>
               <div style={{ alignSelf: 'end' }}><button type="submit">Add task</button></div>
             </form>
           </div>

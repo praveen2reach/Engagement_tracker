@@ -132,6 +132,7 @@ export default function Home() {
           <small>{session?.user?.role === 'admin' ? 'Admin' : 'Team'} · {session?.user?.name}</small>
         </div>
         <nav>
+          <a href="/report">Weekly report</a>
           {isAdmin && <a href="/admin">Admin setup</a>}
           <a href="#" onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }}>Sign out</a>
         </nav>
