@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth/next';
 const { authOptions } = require('../../../lib/auth');
-const { getClient } = require('../../../lib/db');
+const { sql, getPool } = require('../../../lib/db');
 const { recalculateProject } = require('../../../lib/recalculate');
 
 const ADMIN_FIELDS = ['name', 'sequence', 'predecessor_id', 'dependency_type', 'duration_days'];
@@ -9,11 +9,10 @@ const TEAM_FIELDS = ['actual_start', 'actual_end', 'status'];
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
   if (!session) return res.status(401).json({ error: 'Not signed in' });
-  const client = await getClient();
   const { id } = req.query;
 
   if (req.method === 'PATCH') {
-    const { rows: existingRows } = await client.sql`SELECT * FROM tasks WHERE id = ${id}`;
+    const { rows: existingRows } = await sql`SELECT * FROM tasks WHERE id = ${id}`;
     const existing = existingRows[0];
     if (!existing) return res.status(404).json({ error: 'Task not found' });
 
@@ -38,7 +37,7 @@ export default async function handler(req, res) {
 
     const setClauses = Object.keys(updates).map((key, i) => `${key} = $${i + 2}`).join(', ');
     const values = Object.values(updates);
-    await client.query(
+    await getPool().query(
       `UPDATE tasks SET ${setClauses}, updated_at = now() WHERE id = $1`,
       [id, ...values]
     );
@@ -48,15 +47,15 @@ export default async function handler(req, res) {
       await recalculateProject(existing.project_id);
     }
 
-    const { rows: updated } = await client.sql`SELECT * FROM tasks WHERE id = ${id}`;
+    const { rows: updated } = await sql`SELECT * FROM tasks WHERE id = ${id}`;
     return res.status(200).json(updated[0]);
   }
 
   if (req.method === 'DELETE') {
     if (session.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-    const { rows: existingRows } = await client.sql`SELECT * FROM tasks WHERE id = ${id}`;
+    const { rows: existingRows } = await sql`SELECT * FROM tasks WHERE id = ${id}`;
     const existing = existingRows[0];
-    await client.sql`DELETE FROM tasks WHERE id = ${id}`;
+    await sql`DELETE FROM tasks WHERE id = ${id}`;
     if (existing) await recalculateProject(existing.project_id);
     return res.status(204).end();
   }

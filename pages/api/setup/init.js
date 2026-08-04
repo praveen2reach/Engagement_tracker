@@ -14,7 +14,7 @@
 // need to set up yet another variable — anyone hitting this URL without
 // knowing that password gets rejected.
 
-const { createClient } = require('@vercel/postgres');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const SCHEMA_STATEMENTS = [
@@ -78,27 +78,26 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'No POSTGRES_URL available on the server. Is a database attached under Storage?' });
   }
 
-  const client = createClient({ connectionString });
+  const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
   try {
-    await client.connect();
-
     for (const stmt of SCHEMA_STATEMENTS) {
-      await client.query(stmt);
+      await pool.query(stmt);
     }
 
     let adminMessage = 'ADMIN_EMAIL/ADMIN_NAME not set — skipped admin user creation.';
     if (process.env.ADMIN_EMAIL) {
       const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
       const name = process.env.ADMIN_NAME || 'Admin';
-      await client.sql`
-        INSERT INTO users (name, email, password_hash, role)
-        VALUES (${name}, ${process.env.ADMIN_EMAIL}, ${hash}, 'admin')
-        ON CONFLICT (email) DO NOTHING;
-      `;
+      await pool.query(
+        `INSERT INTO users (name, email, password_hash, role)
+         VALUES ($1, $2, $3, 'admin')
+         ON CONFLICT (email) DO NOTHING`,
+        [name, process.env.ADMIN_EMAIL, hash]
+      );
       adminMessage = `Admin user ensured for ${process.env.ADMIN_EMAIL}.`;
     }
 
-    await client.end();
+    await pool.end();
     return res.status(200).json({ status: 'ok', schema: 'created (or already existed)', admin: adminMessage });
   } catch (err) {
     return res.status(500).json({ error: err.message });

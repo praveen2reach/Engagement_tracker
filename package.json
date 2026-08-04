@@ -9,11 +9,11 @@
     "db:init": "node --env-file=.env.local scripts/init-db.js"
   },
   "dependencies": {
-    "@vercel/postgres": "^0.9.0",
     "next": "14.2.35",
     "next-auth": "^4.24.7",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.13.1"
   }
 }

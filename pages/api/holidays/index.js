@@ -1,14 +1,13 @@
 import { getServerSession } from 'next-auth/next';
 const { authOptions } = require('../../../lib/auth');
-const { getClient } = require('../../../lib/db');
+const { sql } = require('../../../lib/db');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
   if (!session) return res.status(401).json({ error: 'Not signed in' });
-  const client = await getClient();
 
   if (req.method === 'GET') {
-    const { rows } = await client.sql`SELECT * FROM holidays ORDER BY holiday_date ASC`;
+    const { rows } = await sql`SELECT * FROM holidays ORDER BY holiday_date ASC`;
     return res.status(200).json(rows);
   }
 
@@ -16,7 +15,7 @@ export default async function handler(req, res) {
     if (session.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
     const { holiday_date, label } = req.body;
     if (!holiday_date || !label) return res.status(400).json({ error: 'holiday_date and label required' });
-    const { rows } = await client.sql`
+    const { rows } = await sql`
       INSERT INTO holidays (holiday_date, label) VALUES (${holiday_date}, ${label})
       ON CONFLICT (holiday_date) DO UPDATE SET label = EXCLUDED.label
       RETURNING *

@@ -1,17 +1,15 @@
 /**
- * Run once after setting POSTGRES_URL (from Vercel Postgres) locally:
- *   npm run db:init
+ * Only needed if you've turned off "Sensitive" on your Vercel env vars so
+ * they can be pulled locally. Otherwise, use the browser-based
+ * /api/setup/init?secret=... endpoint instead (see README).
  *
- * Creates all tables and one admin user, using ADMIN_EMAIL / ADMIN_PASSWORD
- * from your .env.local (see .env.example).
+ *   vercel env pull .env.local --environment=production
+ *   npm run db:init
  */
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-// Fallback loader: if POSTGRES_URL isn't already set (e.g. because
-// `node --env-file=.env.local` isn't supported by an older Node version),
-// read .env.local ourselves and set the variables manually.
 if (!process.env.POSTGRES_URL) {
   const envPath = path.join(__dirname, '..', '.env.local');
   if (fs.existsSync(envPath)) {
@@ -31,24 +29,19 @@ if (!process.env.POSTGRES_URL) {
   }
 }
 
-const { createClient } = require('@vercel/postgres');
+const { Pool } = require('pg');
 
 async function main() {
   const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   if (!connectionString) {
-    throw new Error('No POSTGRES_URL found in the environment. Did you run "vercel env pull .env.local --environment=production"?');
+    throw new Error('No POSTGRES_URL found. Did you run "vercel env pull .env.local --environment=production"?');
   }
-  const client = createClient({ connectionString });
-  await client.connect();
+  const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
 
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-  const statements = schema
-    .split(';')
-    .map((s) => s.trim())
-    .filter(Boolean);
-
+  const statements = schema.split(';').map((s) => s.trim()).filter(Boolean);
   for (const stmt of statements) {
-    await client.query(stmt);
+    await pool.query(stmt);
   }
   console.log('Schema created.');
 
@@ -60,15 +53,16 @@ async function main() {
     console.log('ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping admin user creation.');
   } else {
     const hash = await bcrypt.hash(password, 10);
-    await client.sql`
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES (${name}, ${email}, ${hash}, 'admin')
-      ON CONFLICT (email) DO NOTHING;
-    `;
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, 'admin')
+       ON CONFLICT (email) DO NOTHING`,
+      [name, email, hash]
+    );
     console.log(`Admin user ensured for ${email}.`);
   }
 
-  await client.end();
+  await pool.end();
 }
 
 main()
