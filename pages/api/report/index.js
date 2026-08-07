@@ -48,6 +48,7 @@ export default async function handler(req, res) {
     });
 
   const totalWeeks = project.week_override || maxWeek;
+  const currentWeek = weekIndexForDate(todayStr, projectStart);
 
   const scheduleSuggested = suggestScheduleRag(tasks.map((t) => ({
     planned_end: t.planned_end ? t.planned_end.toISOString().slice(0, 10) : null,
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     project: { id: project.id, name: project.name, start_date: projectStart, week_override: project.week_override },
     totalWeeks,
+    currentWeek,
     tasks: ganttTasks,
     milestones,
     rag,

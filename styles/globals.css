@@ -221,6 +221,9 @@ button.secondary:hover { background: #f0f2f5; }
 .gantt-table td.gantt-cell.filled { background: #9cc7ea; }
 .gantt-table td.gantt-cell.milestone { background: #fff; color: var(--gold); font-weight: 700; text-align: center; }
 .gantt-table tr.milestone-row td:first-child { font-weight: 600; }
+.gantt-table th.current-week-col { background: var(--gold); color: #fff; }
+.gantt-table td.current-week-col { border-left: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+.gantt-table td.current-week-col:not(.gantt-cell) { background: var(--gold-bg); }
 
 .milestone-table td, .milestone-table th { font-size: 12px; }
 

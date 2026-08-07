@@ -20,6 +20,8 @@ export default function Admin() {
   const [newProject, setNewProject] = useState({ name: '', start_date: '' });
   const [newTask, setNewTask] = useState({ name: '', predecessor_id: '', dependency_type: 'FS', duration_days: 1, is_milestone: false, owner: '' });
   const [newHoliday, setNewHoliday] = useState({ holiday_date: '', label: '' });
+  const [copySourceId, setCopySourceId] = useState('');
+  const [copyStatus, setCopyStatus] = useState('');
 
   const loadAll = useCallback(async (pid) => {
     const [pRes, hRes] = await Promise.all([fetch('/api/projects'), fetch('/api/holidays')]);
@@ -105,6 +107,23 @@ export default function Admin() {
     loadTasks(projectId);
   }
 
+  async function copyTasks() {
+    if (!copySourceId) return;
+    setCopyStatus('Copying…');
+    const res = await fetch('/api/tasks/copy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_project_id: copySourceId, target_project_id: projectId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setCopyStatus(`Copied ${data.copied} task(s).`);
+      loadTasks(projectId);
+    } else {
+      setCopyStatus(data.error || 'Copy failed.');
+    }
+  }
+
   async function addHoliday(e) {
     e.preventDefault();
     if (!newHoliday.holiday_date || !newHoliday.label) return;
@@ -151,6 +170,22 @@ export default function Admin() {
           <div className="panel">
             <h2>Task setup</h2>
             <p className="subtle">Set dependency to a predecessor task. FS = starts after predecessor ends. SS = runs in parallel, starting the same day as the predecessor.</p>
+
+            {projects.length > 1 && (
+              <div className="form-grid" style={{ background: '#f6f7f9', padding: 12, borderRadius: 6, marginBottom: 16 }}>
+                <div>
+                  <label>Copy tasks from another engagement</label>
+                  <select value={copySourceId} onChange={(e) => setCopySourceId(e.target.value)}>
+                    <option value="">— Select source engagement —</option>
+                    {projects.filter((p) => p.id !== projectId).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ alignSelf: 'end' }}>
+                  <button className="secondary" onClick={copyTasks} disabled={!copySourceId}>Copy tasks in</button>
+                </div>
+                <div style={{ alignSelf: 'end' }} className="subtle">{copyStatus}</div>
+              </div>
+            )}
             <table style={{ marginBottom: 16 }}>
               <thead><tr><th>Seq</th><th>Task</th><th>Predecessor</th><th>Type</th><th>Duration (days)</th><th>Owner</th><th>Milestone</th><th>Planned</th><th></th></tr></thead>
               <tbody>
