@@ -22,6 +22,10 @@ export default function Admin() {
   const [newHoliday, setNewHoliday] = useState({ holiday_date: '', label: '' });
   const [copySourceId, setCopySourceId] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
+  const [importFile, setImportFile] = useState(null);
+  const [importMode, setImportMode] = useState('add_update');
+  const [importStatus, setImportStatus] = useState(null); // { ok, message, details }
+  const [importing, setImporting] = useState(false);
 
   const loadAll = useCallback(async (pid) => {
     const [pRes, hRes] = await Promise.all([fetch('/api/projects'), fetch('/api/holidays')]);
@@ -124,6 +128,37 @@ export default function Admin() {
     }
   }
 
+  async function handleImport() {
+    if (!importFile) return;
+    if (importMode === 'replace') {
+      const confirmed = confirm(
+        `This will DELETE all ${tasks.length} existing task(s) in this engagement and replace them with what's in the file. This cannot be undone. Continue?`
+      );
+      if (!confirmed) return;
+    }
+    setImporting(true);
+    setImportStatus(null);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      const res = await fetch('/api/tasks/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: projectId, mode: importMode, file_base64: base64 }),
+      });
+      const data = await res.json();
+      setImporting(false);
+      if (res.ok) {
+        setImportStatus({ ok: true, message: `Imported ${data.imported} task(s) (${data.mode === 'replace' ? 'replaced all' : 'added/updated'}).` });
+        setImportFile(null);
+        loadTasks(projectId);
+      } else {
+        setImportStatus({ ok: false, message: data.error, details: data.details });
+      }
+    };
+    reader.readAsDataURL(importFile);
+  }
+
   async function addHoliday(e) {
     e.preventDefault();
     if (!newHoliday.holiday_date || !newHoliday.label) return;
@@ -186,6 +221,35 @@ export default function Admin() {
                 <div style={{ alignSelf: 'end' }} className="subtle">{copyStatus}</div>
               </div>
             )}
+
+            <div style={{ background: '#f6f7f9', padding: 12, borderRadius: 6, marginBottom: 16 }}>
+              <label style={{ fontSize: 11, textTransform: 'uppercase', color: '#7c8aa0', display: 'block', marginBottom: 8 }}>Excel template</label>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'end' }}>
+                <a href={`/api/tasks/export?project_id=${projectId}`}>
+                  <button className="secondary" type="button">Download Excel{tasks.length ? ' (current tasks)' : ' (blank template)'}</button>
+                </a>
+
+                <div>
+                  <label style={{ fontSize: 11, color: '#7c8aa0' }}>Upload mode</label>
+                  <select value={importMode} onChange={(e) => setImportMode(e.target.value)} style={{ width: 220 }}>
+                    <option value="add_update">Add / update (match by task name)</option>
+                    <option value="replace">Replace all tasks in this engagement</option>
+                  </select>
+                </div>
+                <input type="file" accept=".xlsx" onChange={(e) => setImportFile(e.target.files[0] || null)} style={{ width: 220 }} />
+                <button onClick={handleImport} disabled={!importFile || importing}>{importing ? 'Uploading…' : 'Upload'}</button>
+              </div>
+              {importStatus && (
+                <div style={{ marginTop: 10 }}>
+                  <div className={importStatus.ok ? 'badge green' : 'badge red'} style={{ padding: '4px 10px' }}>{importStatus.message}</div>
+                  {importStatus.details && (
+                    <ul style={{ fontSize: 12, color: '#c94a3d', marginTop: 6 }}>
+                      {importStatus.details.map((d, i) => <li key={i}>{d}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
             <table style={{ marginBottom: 16 }}>
               <thead><tr><th>Seq</th><th>Task</th><th>Predecessor</th><th>Type</th><th>Duration (days)</th><th>Owner</th><th>Milestone</th><th>Planned</th><th></th></tr></thead>
               <tbody>
