@@ -30,8 +30,8 @@ export default async function handler(req, res) {
   for (const t of sourceTasks) {
     const newPredecessorId = t.predecessor_id ? idMap.get(t.predecessor_id) || null : null;
     const { rows } = await sql`
-      INSERT INTO tasks (project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, owner)
-      VALUES (${target_project_id}, ${t.name}, ${t.sequence}, ${newPredecessorId}, ${t.dependency_type}, ${t.duration_days}, ${t.is_milestone}, ${t.owner})
+      INSERT INTO tasks (project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, functional_owner, technical_owner, integration_owner, client_poc)
+      VALUES (${target_project_id}, ${t.name}, ${t.sequence}, ${newPredecessorId}, ${t.dependency_type}, ${t.duration_days}, ${t.is_milestone}, ${t.functional_owner}, ${t.technical_owner}, ${t.integration_owner}, ${t.client_poc})
       RETURNING id
     `;
     idMap.set(t.id, rows[0].id);

@@ -177,7 +177,7 @@ export default function Report() {
                   {report.tasks.map((t) => (
                     <tr key={t.id} className={t.is_milestone ? 'milestone-row' : ''}>
                       <td>{t.name}</td>
-                      <td>{t.owner || '—'}</td>
+                      <td>{t.functional_owner || '—'}</td>
                       <td>{t.planned_start}</td>
                       <td>{t.planned_end}</td>
                       {weeks.map((w) => {

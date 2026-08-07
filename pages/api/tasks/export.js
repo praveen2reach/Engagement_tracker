@@ -3,7 +3,7 @@ const { authOptions } = require('../../../lib/auth');
 const { sql } = require('../../../lib/db');
 const ExcelJS = require('exceljs');
 
-const HEADERS = ['S.No', 'Task', 'Predecessor', 'Duration (days)', 'Owner', 'Milestone (Yes/No)', 'Dependency Type (FS/SS)'];
+const HEADERS = ['S.No', 'Task', 'Predecessor', 'Duration (days)', 'Functional Owner', 'Technical Owner', 'Integration Owner', 'Client PoC', 'Milestone (Yes/No)', 'Dependency Type (FS/SS)'];
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -36,8 +36,8 @@ export default async function handler(req, res) {
   sheet.views = [{ state: 'frozen', ySplit: 3 }];
 
   if (tasks.length === 0) {
-    sheet.addRow([1, 'Requirement Gathering', '', 5, 'Consultant Name', 'No', 'FS']);
-    sheet.addRow([2, 'Solution Design', 'Requirement Gathering', 8, 'Consultant Name', 'No', 'FS']);
+    sheet.addRow([1, 'Requirement Gathering', '', 5, 'Functional Lead', 'Tech Lead', '', 'Client Name', 'No', 'FS']);
+    sheet.addRow([2, 'Solution Design', 'Requirement Gathering', 8, 'Functional Lead', 'Tech Lead', '', 'Client Name', 'No', 'FS']);
   } else {
     for (const t of tasks) {
       const predName = t.predecessor_id ? byId.get(t.predecessor_id)?.name || '' : '';
@@ -46,7 +46,10 @@ export default async function handler(req, res) {
         t.name,
         predName,
         t.duration_days,
-        t.owner || '',
+        t.functional_owner || '',
+        t.technical_owner || '',
+        t.integration_owner || '',
+        t.client_poc || '',
         t.is_milestone ? 'Yes' : 'No',
         t.dependency_type || 'FS',
       ]);
@@ -58,6 +61,9 @@ export default async function handler(req, res) {
     { width: 34 },
     { width: 30 },
     { width: 16 },
+    { width: 18 },
+    { width: 18 },
+    { width: 18 },
     { width: 18 },
     { width: 16 },
     { width: 20 },

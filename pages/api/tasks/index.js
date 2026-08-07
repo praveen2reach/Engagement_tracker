@@ -38,13 +38,13 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     if (session.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-    const { project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, owner } = req.body;
+    const { project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, functional_owner, technical_owner, integration_owner, client_poc } = req.body;
     if (!project_id || !name || !duration_days) {
       return res.status(400).json({ error: 'project_id, name, duration_days required' });
     }
     const { rows } = await sql`
-      INSERT INTO tasks (project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, owner)
-      VALUES (${project_id}, ${name}, ${sequence || 0}, ${predecessor_id || null}, ${dependency_type || 'FS'}, ${duration_days}, ${is_milestone || false}, ${owner || null})
+      INSERT INTO tasks (project_id, name, sequence, predecessor_id, dependency_type, duration_days, is_milestone, functional_owner, technical_owner, integration_owner, client_poc)
+      VALUES (${project_id}, ${name}, ${sequence || 0}, ${predecessor_id || null}, ${dependency_type || 'FS'}, ${duration_days}, ${is_milestone || false}, ${functional_owner || null}, ${technical_owner || null}, ${integration_owner || null}, ${client_poc || null})
       RETURNING *
     `;
     await recalculateProject(project_id);

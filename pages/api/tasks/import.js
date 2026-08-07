@@ -52,9 +52,12 @@ export default async function handler(req, res) {
 
     const predecessor = String(cells[3] || '').trim();
     const durationRaw = cells[4];
-    const owner = String(cells[5] || '').trim();
-    const milestoneRaw = String(cells[6] || '').trim().toLowerCase();
-    const depTypeRaw = String(cells[7] || '').trim().toUpperCase();
+    const functional_owner = String(cells[5] || '').trim();
+    const technical_owner = String(cells[6] || '').trim();
+    const integration_owner = String(cells[7] || '').trim();
+    const client_poc = String(cells[8] || '').trim();
+    const milestoneRaw = String(cells[9] || '').trim().toLowerCase();
+    const depTypeRaw = String(cells[10] || '').trim().toUpperCase();
 
     const duration = Number(durationRaw);
     if (!durationRaw || Number.isNaN(duration) || duration <= 0) {
@@ -66,7 +69,7 @@ export default async function handler(req, res) {
     }
     const is_milestone = milestoneRaw === 'yes';
 
-    parsed.push({ rowNumber, name, predecessor, duration, owner, is_milestone, dependency_type });
+    parsed.push({ rowNumber, name, predecessor, duration, functional_owner, technical_owner, integration_owner, client_poc, is_milestone, dependency_type });
   });
 
   if (parsed.length === 0) {
@@ -107,8 +110,8 @@ export default async function handler(req, res) {
     let seq = 1;
     for (const p of parsed) {
       const { rows } = await sql`
-        INSERT INTO tasks (project_id, name, sequence, duration_days, owner, is_milestone, dependency_type)
-        VALUES (${project_id}, ${p.name}, ${seq}, ${p.duration}, ${p.owner || null}, ${p.is_milestone}, ${p.dependency_type})
+        INSERT INTO tasks (project_id, name, sequence, duration_days, functional_owner, technical_owner, integration_owner, client_poc, is_milestone, dependency_type)
+        VALUES (${project_id}, ${p.name}, ${seq}, ${p.duration}, ${p.functional_owner || null}, ${p.technical_owner || null}, ${p.integration_owner || null}, ${p.client_poc || null}, ${p.is_milestone}, ${p.dependency_type})
         RETURNING id
       `;
       nameToId.set(p.name, rows[0].id);
@@ -130,13 +133,13 @@ export default async function handler(req, res) {
       if (nameToId.has(p.name)) {
         await sql`
           UPDATE tasks
-          SET duration_days = ${p.duration}, owner = ${p.owner || null}, is_milestone = ${p.is_milestone}, dependency_type = ${p.dependency_type}
+          SET duration_days = ${p.duration}, functional_owner = ${p.functional_owner || null}, technical_owner = ${p.technical_owner || null}, integration_owner = ${p.integration_owner || null}, client_poc = ${p.client_poc || null}, is_milestone = ${p.is_milestone}, dependency_type = ${p.dependency_type}
           WHERE id = ${nameToId.get(p.name)}
         `;
       } else {
         const { rows } = await sql`
-          INSERT INTO tasks (project_id, name, sequence, duration_days, owner, is_milestone, dependency_type)
-          VALUES (${project_id}, ${p.name}, ${nextSeq}, ${p.duration}, ${p.owner || null}, ${p.is_milestone}, ${p.dependency_type})
+          INSERT INTO tasks (project_id, name, sequence, duration_days, functional_owner, technical_owner, integration_owner, client_poc, is_milestone, dependency_type)
+          VALUES (${project_id}, ${p.name}, ${nextSeq}, ${p.duration}, ${p.functional_owner || null}, ${p.technical_owner || null}, ${p.integration_owner || null}, ${p.client_poc || null}, ${p.is_milestone}, ${p.dependency_type})
           RETURNING id
         `;
         nameToId.set(p.name, rows[0].id);

@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       return {
         id: t.id,
         name: t.name,
-        owner: t.owner,
+        functional_owner: t.functional_owner,
         is_milestone: t.is_milestone,
         status: t.status,
         planned_start: plannedStart,
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
 
   const milestones = ganttTasks
     .filter((t) => t.is_milestone)
-    .map((t) => ({ name: t.name, status: t.status, due: t.planned_end, owner: t.owner }));
+    .map((t) => ({ name: t.name, status: t.status, due: t.planned_end, owner: t.functional_owner }));
 
   return res.status(200).json({
     project: { id: project.id, name: project.name, start_date: projectStart, week_override: project.week_override },

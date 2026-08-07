@@ -61,8 +61,23 @@ CREATE INDEX IF NOT EXISTS idx_comments_task ON comments(task_id);
 -- Added for the weekly status report (Gantt + RAG + Milestones)
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_milestone BOOLEAN DEFAULT false;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS owner TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS functional_owner TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS technical_owner TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS integration_owner TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS client_poc TEXT;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS week_override INTEGER;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_overall TEXT;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_schedule TEXT;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_scope TEXT;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS rag_resource TEXT;
+
+CREATE TABLE IF NOT EXISTS recovery_notes (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+  task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+  note_type TEXT NOT NULL DEFAULT 'manual',
+  note_text TEXT NOT NULL,
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_recovery_notes_project ON recovery_notes(project_id);

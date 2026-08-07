@@ -58,14 +58,14 @@ export default async function handler(req, res) {
     }).map((t) => {
       const plannedEnd = t.planned_end.toISOString().slice(0, 10);
       const lateDays = deviationDays(plannedEnd, todayStr, holidaySet);
-      return { name: t.name, owner: t.owner, lateDays };
+      return { name: t.name, owner: t.functional_owner, lateDays };
     });
 
     const upcomingMilestones = tasks.filter((t) => {
       if (!t.is_milestone || !t.planned_end) return false;
       const plannedEnd = t.planned_end.toISOString().slice(0, 10);
       return plannedEnd >= todayStr && plannedEnd <= sevenDaysOutStr;
-    }).map((t) => ({ name: t.name, due: t.planned_end.toISOString().slice(0, 10), owner: t.owner }));
+    }).map((t) => ({ name: t.name, due: t.planned_end.toISOString().slice(0, 10), owner: t.functional_owner }));
 
     if (overdue.length === 0 && upcomingMilestones.length === 0 && recentComments.length === 0) continue;
     anythingToReport = true;
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
     if (overdue.length) {
       sections += `<p><b>Overdue tasks (${overdue.length})</b></p><ul>`;
       for (const t of overdue) {
-        sections += `<li>${t.name}${t.owner ? ` (${t.owner})` : ''} — ${t.lateDays} working day${t.lateDays > 1 ? 's' : ''} late</li>`;
+        sections += `<li>${t.name}${t.functional_owner ? ` (${t.functional_owner})` : ''} — ${t.lateDays} working day${t.lateDays > 1 ? 's' : ''} late</li>`;
       }
       sections += `</ul>`;
     }
