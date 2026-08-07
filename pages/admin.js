@@ -20,6 +20,9 @@ export default function Admin() {
   const [newProject, setNewProject] = useState({ name: '', start_date: '' });
   const [newTask, setNewTask] = useState({ name: '', predecessor_id: '', dependency_type: 'FS', duration_days: 1, is_milestone: false, owner: '' });
   const [newHoliday, setNewHoliday] = useState({ holiday_date: '', label: '' });
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'team' });
+  const [userMessage, setUserMessage] = useState('');
   const [copySourceId, setCopySourceId] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
   const [importFile, setImportFile] = useState(null);
@@ -28,7 +31,7 @@ export default function Admin() {
   const [importing, setImporting] = useState(false);
 
   const loadAll = useCallback(async (pid) => {
-    const [pRes, hRes] = await Promise.all([fetch('/api/projects'), fetch('/api/holidays')]);
+    const [pRes, hRes, uRes] = await Promise.all([fetch('/api/projects'), fetch('/api/holidays'), fetch('/api/users')]);
     if (pRes.ok) {
       const data = await pRes.json();
       setProjects(data);
@@ -36,6 +39,7 @@ export default function Admin() {
       setProjectId(pid);
     }
     if (hRes.ok) setHolidays(await hRes.json());
+    if (uRes.ok) setUsers(await uRes.json());
   }, []);
 
   const loadTasks = useCallback(async (pid) => {
@@ -167,6 +171,39 @@ export default function Admin() {
     });
     setNewHoliday({ holiday_date: '', label: '' });
     loadAll(projectId);
+  }
+
+  async function addUser(e) {
+    e.preventDefault();
+    if (!newUser.name || !newUser.email) return;
+    setUserMessage('');
+    const res = await fetch('/api/users', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newUser),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setUserMessage(`Added ${data.user.name}. Temporary password: ${data.temp_password} — share this with them directly (it won't be shown again).`);
+      setNewUser({ name: '', email: '', role: 'team' });
+      loadAll(projectId);
+    } else {
+      setUserMessage(data.error || 'Could not add user.');
+    }
+  }
+
+  async function changeRole(id, role) {
+    await fetch(`/api/users/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }),
+    });
+    loadAll(projectId);
+  }
+
+  async function resetPassword(id, name) {
+    if (!confirm(`Reset ${name}'s password? They'll need the new temporary password to sign in.`)) return;
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reset_password: true }),
+    });
+    const data = await res.json();
+    setUserMessage(`New temporary password for ${name}: ${data.temp_password} — share this with them directly.`);
   }
 
   return (
@@ -307,6 +344,43 @@ export default function Admin() {
             <div><label>Label</label><input value={newHoliday.label} onChange={(e) => setNewHoliday({ ...newHoliday, label: e.target.value })} placeholder="e.g. Diwali" /></div>
             <div style={{ alignSelf: 'end' }}><button type="submit">Add holiday</button></div>
           </form>
+        </div>
+
+        <div className="panel">
+          <h2>Team members</h2>
+          <p className="subtle">Add teammates here instead of touching the database directly. They'll sign in with the email and temporary password shown below — share it with them directly (e.g. Slack DM), it won't be shown again after you leave this page.</p>
+          <table style={{ marginBottom: 16 }}>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Added</th><th></th></tr></thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <select value={u.role} onChange={(e) => changeRole(u.id, e.target.value)} style={{ width: 100 }}>
+                      <option value="team">Team</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td>{u.created_at?.slice(0, 10)}</td>
+                  <td><button className="secondary" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => resetPassword(u.id, u.name)}>Reset password</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <form onSubmit={addUser} className="form-grid">
+            <div><label>Name</label><input value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} /></div>
+            <div><label>Email</label><input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></div>
+            <div>
+              <label>Role</label>
+              <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
+                <option value="team">Team</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div style={{ alignSelf: 'end' }}><button type="submit">Add teammate</button></div>
+          </form>
+          {userMessage && <p style={{ marginTop: 10, fontSize: 13, background: '#fdf3e0', padding: 10, borderRadius: 6 }}>{userMessage}</p>}
         </div>
       </div>
     </>
